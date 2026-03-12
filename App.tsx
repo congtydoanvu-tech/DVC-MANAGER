@@ -97,9 +97,12 @@ const App: React.FC = () => {
 export default App;
 import { createRoot } from 'react-dom/client';
 
+// Tìm thẻ div có id="root" trong file index.html
 const container = document.getElementById('root');
+
 if (container) {
   const root = createRoot(container);
+  // Vẽ toàn bộ ứng dụng App vào trong thẻ div đó
   root.render(
     <React.StrictMode>
       <App />
