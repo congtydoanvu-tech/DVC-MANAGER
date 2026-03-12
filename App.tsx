@@ -95,10 +95,8 @@ const App: React.FC = () => {
 };
 
 export default App;
-import React from 'react';
 import { createRoot } from 'react-dom/client';
 
-// Đoạn này giúp React gắn code vào thẻ div#root trong index.html
 const container = document.getElementById('root');
 if (container) {
   const root = createRoot(container);
