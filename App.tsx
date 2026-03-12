@@ -1,48 +1,4 @@
-TypeScript
-import React, { useState, useEffect, useCallback } from 'react';
-// ... (Import tất cả components từ thư mục ./components/)
 
-const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [userRole, setUserRole] = useState<UserRole>(null);
-  const [teamCode, setTeamCode] = useState<string | null>(null);
-
-  // Khởi tạo dữ liệu từ LocalStorage hoặc Mock Data
-  const [slips, setSlips] = useState<PumpingSlip[]>(() => 
-    JSON.parse(localStorage.getItem('dvc_slips') || '[]')
-  );
-  const [teams, setTeams] = useState<Team[]>(MOCK_TEAMS);
-
-  // Lưu dữ liệu mỗi khi có thay đổi
-  useEffect(() => {
-    localStorage.setItem('dvc_slips', JSON.stringify(slips));
-  }, [slips]);
-
-  const handleUpdateSlip = useCallback((updatedSlip: PumpingSlip) => {
-    setSlips(prev => prev.map(s => s.id === updatedSlip.id ? updatedSlip : s));
-    
-    // Logic khấu trừ quỹ dầu tự động 10k/m3 khi duyệt phiếu
-    if (updatedSlip.status === 'approved') {
-       const fuelFee = updatedSlip.volumeActual * 10000;
-       setTeams(prev => prev.map(t => t.id === updatedSlip.teamId ? 
-         { ...t, fuelBalance: (t.fuelBalance || 0) - fuelFee } : t));
-    }
-  }, []);
-
-  if (!userRole) {
-    return <Login teams={teams} onLogin={(role, code) => {
-      setUserRole(role);
-      if (code) setTeamCode(code);
-      setActiveTab(role === 'team' ? 'slips' : 'dashboard');
-    }} adminPassword="admin" />;
-  }
-
-  return (
-    <Layout activeTab={activeTab} setActiveTab={setActiveTab} userRole={userRole} onLogout={() => setUserRole(null)}>
-      {/* Render nội dung dựa trên activeTab tương tự như file App.tsx bạn đã gửi */}
-    </Layout>
-  );
-};
 import React, { useState, useEffect, useCallback } from 'react';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
@@ -56,7 +12,7 @@ import TeamManagement from './components/TeamManagement';
 import CustomerManagement from './components/CustomerManagement';
 import ExpenseManagement from './components/ExpenseManagement';
 import FuelManagement from './components/FuelManagement';
-import { MOCK_TEAMS, MOCK_WORKERS, MOCK_CUSTOMERS, FUEL_FEE_PER_M3 } from './constants';
+import { MOCK_TEAMS, MOCK_WORKERS, MOCK_CUSTOMERS } from './constants';
 import { Team, PumpingSlip, Worker, ExpenseRecord, FuelTransaction, Customer } from './types';
 
 export type UserRole = 'admin' | 'team' | null;
@@ -72,8 +28,8 @@ const App: React.FC = () => {
   const [workers, setWorkers] = useState<Worker[]>(() => JSON.parse(localStorage.getItem('dvc_workers') || JSON.stringify(MOCK_WORKERS)));
   const [slips, setSlips] = useState<PumpingSlip[]>(() => JSON.parse(localStorage.getItem('dvc_slips') || '[]'));
   const [expenses, setExpenses] = useState<ExpenseRecord[]>(() => JSON.parse(localStorage.getItem('dvc_expenses') || '[]'));
-  const [fuelTransactions, setFuelTransactions] = useState<FuelTransaction[]>(() => JSON.parse(localStorage.getItem('dvc_fuel_tx') || '[]'));
 
+  // Lưu dữ liệu vào LocalStorage
   useEffect(() => {
     localStorage.setItem('dvc_admin_pw', adminPassword);
     localStorage.setItem('dvc_customers', JSON.stringify(customers));
@@ -86,10 +42,9 @@ const App: React.FC = () => {
   const handleUpdateSlip = useCallback((updatedSlip: PumpingSlip) => {
     setSlips(prev => prev.map(s => s.id === updatedSlip.id ? updatedSlip : s));
     
-    // Logic sau khi duyệt: Cập nhật quỹ dầu cho đội bơm (10k/m3 - giả định theo tiêu chuẩn DVC)
     if (updatedSlip.status === 'approved') {
        const fuelFee = updatedSlip.volumeActual * 10000;
-       setTeams(prev => prev.map(t => t.id === updatedSlip.teamId ? { ...t, fuelBalance: t.fuelBalance - fuelFee } : t));
+       setTeams(prev => prev.map(t => t.id === updatedSlip.teamId ? { ...t, fuelBalance: (t.fuelBalance || 0) - fuelFee } : t));
     }
   }, []);
 
