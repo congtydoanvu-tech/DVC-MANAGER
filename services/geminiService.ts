@@ -1,77 +1,30 @@
+TypeScript
+import { GoogleGenerativeAI } from "@google/genai";
 
-import { GoogleGenAI, Type } from "@google/genai";
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+const genAI = new GoogleGenerativeAI(API_KEY || "");
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
-export const getGeminiInsights = async (dataSummary: string) => {
+export const getGeminiInsights = async (summary: string) => {
+  if (!API_KEY) return "Chưa cấu hình API Key trên Vercel.";
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: `Dựa trên dữ liệu sau, hãy đưa ra tóm tắt 3 dòng về tình hình DVC: ${dataSummary}`,
-      config: {
-        systemInstruction: "Bạn là trợ lý quản lý DVC chuyên nghiệp. Trả lời súc tích, chuyên sâu.",
-      },
-    });
-    return response.text || "Đang cập nhật...";
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const result = await model.generateContent(`Dưới đây là dữ liệu vận hành bê tông: ${summary}. Hãy đưa ra 1 nhận xét ngắn gọn, chuyên nghiệp.`);
+    return result.response.text();
   } catch (error) {
-    return "Không thể lấy phân tích.";
+    return "AI đang bận, vui lòng thử lại sau.";
   }
 };
 
-export const analyzePumpingSlipPhoto = async (base64Image: string) => {
+export const analyzePumpingSlipPhoto = async (base64: string) => {
+  if (!API_KEY) return null;
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-pro-preview',
-      contents: {
-        parts: [
-          { inlineData: { mimeType: 'image/jpeg', data: base64Image.split(',')[1] || base64Image } },
-          { text: "Trích xuất thông tin phiếu bơm bê tông: khách hàng, dự án, địa chỉ, khối lượng (volume), mét ống (pipeLength)." },
-        ],
-      },
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            customerName: { type: Type.STRING },
-            projectName: { type: Type.STRING },
-            address: { type: Type.STRING },
-            volume: { type: Type.NUMBER },
-            pipeLength: { type: Type.NUMBER },
-          },
-        },
-      },
-    });
-    return response.text ? JSON.parse(response.text) : null;
-  } catch (error) {
-    return null;
-  }
-};
-
-export const analyzeExpensePhoto = async (base64Image: string) => {
-  try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-pro-preview',
-      contents: {
-        parts: [
-          { inlineData: { mimeType: 'image/jpeg', data: base64Image.split(',')[1] || base64Image } },
-          { text: "Trích xuất hóa đơn: số tiền (amount), loại chi phí (category: Dầu, Ăn uống, Sửa chữa, Khác), ghi chú (notes)." },
-        ],
-      },
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            amount: { type: Type.NUMBER },
-            category: { type: Type.STRING },
-            notes: { type: Type.STRING },
-          },
-        },
-      },
-    });
-    return response.text ? JSON.parse(response.text) : null;
-  } catch (error) {
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const prompt = "Phân tích ảnh phiếu bơm này. Trả về JSON: {customerName, projectName, volume, address}";
+    const imagePart = { inlineData: { data: base64.split(",")[1], mimeType: "image/jpeg" } };
+    const result = await model.generateContent([prompt, imagePart]);
+    return JSON.parse(result.response.text());
+  } catch (e) {
+    console.error("AI Analysis Error", e);
     return null;
   }
 };
