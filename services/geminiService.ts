@@ -1,5 +1,4 @@
 // @ts-ignore
-
 // Cách truy cập biến môi trường an toàn để không bị lỗi build TypeScript
 const API_KEY = (import.meta as any).env?.VITE_GEMINI_API_KEY || "";
 const genAI = new GoogleGenerativeAI(API_KEY);
