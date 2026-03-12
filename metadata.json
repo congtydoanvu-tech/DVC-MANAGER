@@ -1,0 +1,7 @@
+{
+  "name": "Remix: Copy of DVC Management System",
+  "description": "A comprehensive management application for concrete pumping services, tracking volumes, debts, payroll, and team expenses.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
